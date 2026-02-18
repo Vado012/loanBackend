@@ -1,8 +1,8 @@
 import e from 'express';
 import { config } from 'dotenv';
 import mongoose, { get } from 'mongoose';
-import userRoutes from './Routes/userRoutes.js';
-import  LoanRoutes from './Routes/LoanRoutes.js';
+import userRoutes from './routes/UserRoutes.js';
+import  LoanRoutes from './routes/LoanRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
 
