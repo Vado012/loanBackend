@@ -1,6 +1,6 @@
 import e from 'express';
 import { applyLoan, deleteLoan, getAllLoan, updateLoan } from '../controller/loanController.js';
-import authorize from '../middleware/authorization.js';
+import authorize from '../middleware/Authorization.js';
 const router = e.Router();
 
 router.post('/',authorize(["admin","user"]), applyLoan )
