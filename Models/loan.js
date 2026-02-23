@@ -6,9 +6,9 @@ const loanSchema = mongoose.Schema({
         required:true
     },
     term:{
-        type:String,
+        type:Number,
         required:true,
-        enum:["6 months", "12 months", "18 months", "24 months"]
+        enum:[6 , 12, 18, 24]
     },
     purpose:{
         type:String,
