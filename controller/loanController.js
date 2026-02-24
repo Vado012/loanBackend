@@ -3,27 +3,25 @@ import Loan from "../Models/loan.js";
 const applyLoan = async (req, res) => {
     try {
         const { amount, term, purpose } = req.body;
-        const userId = req.user.id; // Assuming the user ID is stored in the token  
+        const userId = req.user.id;
         
-        const newLoan = await Loan.create({
-            amount,
-            term,
-            purpose,
-            userId
-        });
-
+        if (!amount || !term || !purpose) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+        
+        const newLoan = await Loan.create({ amount, term, purpose, userId });
         res.status(201).json({ success: true, message: "Loan applied successfully!", loan: newLoan });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(500).json({ success: false, message: error.message || "Internal server error" });
     }
 }
 
 const getAllLoan = async (req, res) => {
     try {
-        const loans = await Loan.find(); 
+        const loans = req.user.role === "admin" ? await Loan.find().populate('userId', 'name email') : await Loan.find({ userId: req.user.id });
         res.status(200).json({ success: true, loans });
-    } catch (error) {   
+    } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
@@ -31,13 +29,15 @@ const getAllLoan = async (req, res) => {
 
 const deleteLoan = async (req, res) => {
     try {
-        const loanId = req.params.id;
-        const deletedLoan = await Loan.findByIdAndDelete(loanId);
-        if (!deletedLoan) {
-            res.status(404).json({ success: false, message: "Loan not found" });
-        } else {
-            res.status(200).json({ success: true, message: "Loan deleted successfully!" });
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) {
+            return res.status(404).json({ success: false, message: "Loan not found" });
         }
+        if (req.user.role !== "admin" && loan.userId.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+        await Loan.findByIdAndDelete(req.params.id);
+        res.status(200).json({ success: true, message: "Loan deleted successfully!" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error" });
@@ -46,26 +46,21 @@ const deleteLoan = async (req, res) => {
 
 const updateLoan = async (req, res) => {
     try {
-        const loanId = req.params.id;
-        const { amount, term, purpose } = req.body;
-        const updatedLoan = await Loan.findByIdAndUpdate(loanId, { amount, term, purpose }, { new: true });
-
-        if(!updatedLoan) {
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) {
             return res.status(404).json({ success: false, message: "Loan not found" });
         }
+        if (req.user.role !== "admin" && loan.userId.toString() !== req.user.id) {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+        const { amount, term, purpose, status } = req.body;
+        const updateData = req.user.role === "admin" ? { amount, term, purpose, status } : { amount, term, purpose };
+        const updatedLoan = await Loan.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
         res.status(200).json({ success: true, message: "Loan updated successfully!", loan: updatedLoan });
-
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
 
-const logout = (req, res) => {
-    res.clearCookie('token');
-    res.status(200).json({ success: true, message: "Logged out successfully!" });
-}       
-
-
-export { applyLoan, getAllLoan, deleteLoan, updateLoan, logout };
+export { applyLoan, getAllLoan, deleteLoan, updateLoan };
