@@ -19,7 +19,7 @@ const applyLoan = async (req, res) => {
 
 const getAllLoan = async (req, res) => {
     try {
-        const loans = req.user.role === "admin" ? await Loan.find().populate('userId', 'name email') : await Loan.find({ userId: req.user.id });
+        const loans = req.user.role === "admin" ? await Loan.find().populate('userId', 'Firstname Lastname Email') : await Loan.find({ userId: req.user.id });
         res.status(200).json({ success: true, loans });
     } catch (error) {
         console.error(error);
@@ -50,12 +50,13 @@ const updateLoan = async (req, res) => {
         if (!loan) {
             return res.status(404).json({ success: false, message: "Loan not found" });
         }
-        if (req.user.role !== "admin" && loan.userId.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: "Unauthorized" });
-        }
+        // if (req.user.role !== "admin" && loan.userId.toString() !== req.user.id) {
+        //     return res.status(403).json({ success: false, message: "Unauthorized" });
+        // }
         const { amount, term, purpose, status } = req.body;
-        const updateData = req.user.role === "admin" ? { amount, term, purpose, status } : { amount, term, purpose };
+        const updateData = { amount, term, purpose, status }
         const updatedLoan = await Loan.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
+        console.log(updatedLoan);
         res.status(200).json({ success: true, message: "Loan updated successfully!", loan: updatedLoan });
     } catch (error) {
         console.error(error);

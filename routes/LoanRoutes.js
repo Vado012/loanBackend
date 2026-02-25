@@ -6,6 +6,6 @@ const router = e.Router();
 router.post('/',authorize(["admin","user"]), applyLoan )
 router.get('/',authorize(["admin", "user"]), getAllLoan)
 router.delete('/:id',authorize(["admin", "user"]), deleteLoan)
-router.put('/:id',authorize(["admin", "user"]), updateLoan)
+router.put('/:id', updateLoan)
 
 export default router;
