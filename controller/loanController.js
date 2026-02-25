@@ -19,7 +19,17 @@ const applyLoan = async (req, res) => {
 
 const getAllLoan = async (req, res) => {
     try {
-        const loans = await Loan.find().populate('userId', 'Firstname Lastname Email') 
+        const loans = await Loan.find().populate('userId', 'Firstname Lastname Email');
+        res.status(200).json({ success: true, loans });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+const getUserLoans = async (req, res) => {
+    try {
+        const loans = await Loan.find({ userId: req.user.id });
         res.status(200).json({ success: true, loans });
     } catch (error) {
         console.error(error);
@@ -64,4 +74,4 @@ const updateLoan = async (req, res) => {
     }
 }
 
-export { applyLoan, getAllLoan, deleteLoan, updateLoan };
+export { applyLoan, getAllLoan, getUserLoans, deleteLoan, updateLoan };
