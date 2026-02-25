@@ -70,11 +70,8 @@ const login = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
-    const Users = await User.find().select("-Password");
-    if (Users.length === 0) {
-      return res.status(404).json({ success: false, message: "No users found" });
-    }
-    res.status(200).json({ success: true, Users });
+    const users = await User.find().select("-Password");
+    res.status(200).json({ success: true, users });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -84,8 +81,8 @@ const getAllUsers = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const User = await User.findByIdAndDelete(id);
-    if (!User) {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
     res.status(200).json({ success: true, message: "User deleted successfully!" });
@@ -98,11 +95,11 @@ const deleteUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const User = await User.findByIdAndUpdate(id, req.body, { new: true });
-    if (!User) {
+    const user = await User.findByIdAndUpdate(id, req.body, { new: true });
+    if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
-    res.status(200).json({ success: true, message: "User updated successfully!", User });
+    res.status(200).json({ success: true, message: "User updated successfully!", user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });

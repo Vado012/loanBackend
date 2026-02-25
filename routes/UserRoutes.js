@@ -5,7 +5,7 @@ const router = e.Router();
 
 router.post('/',createuser)
 router.post('/login',login)
-router.get('/allusers', getAllUsers)
+router.get('/allusers', authorize(["admin"]), getAllUsers)
 router.get('/profile', authorize(["admin", "user"]), getProfile)
 
 export default router;
