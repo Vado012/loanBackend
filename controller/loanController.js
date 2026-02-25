@@ -19,7 +19,7 @@ const applyLoan = async (req, res) => {
 
 const getAllLoan = async (req, res) => {
     try {
-        const loans = await Loan.find().populate('userId', 'Firstname Lastname Email');
+        const loans = await Loan.find().populate('userId', 'Firstname Lastname Email') 
         res.status(200).json({ success: true, loans });
     } catch (error) {
         console.error(error);
@@ -29,7 +29,8 @@ const getAllLoan = async (req, res) => {
 
 const getUserLoans = async (req, res) => {
     try {
-        const loans = await Loan.find({ userId: req.user.id });
+        const userId = req.user.id;
+        const loans = await Loan.find({ userId });
         res.status(200).json({ success: true, loans });
     } catch (error) {
         console.error(error);
@@ -74,4 +75,4 @@ const updateLoan = async (req, res) => {
     }
 }
 
-export { applyLoan, getAllLoan, getUserLoans, deleteLoan, updateLoan };
+export { applyLoan, getAllLoan, deleteLoan, updateLoan, getUserLoans };
