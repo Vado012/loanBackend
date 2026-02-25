@@ -19,7 +19,7 @@ const applyLoan = async (req, res) => {
 
 const getAllLoan = async (req, res) => {
     try {
-        const loans = req.user.role === "admin" ? await Loan.find().populate('userId', 'Firstname Lastname Email') : await Loan.find({ userId: req.user.id });
+        const loans = await Loan.find().populate('userId', 'Firstname Lastname Email') 
         res.status(200).json({ success: true, loans });
     } catch (error) {
         console.error(error);
