@@ -21,14 +21,6 @@ const createuser = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email already exists" });
     }
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
     const hashedPassword = await bcrypt.hash(Password, 10);
 
     const newuser = await User.create({
@@ -40,6 +32,14 @@ const createuser = async (req, res) => {
     });
 
     try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: Email,
@@ -64,10 +64,7 @@ const createuser = async (req, res) => {
     res.status(201).json({ success: true, message: "User created successfully!" });
   } catch (error) {
     console.error(error);
-    if (error.message.includes('Invalid login')) {
-      return res.status(400).json({ success: false, message: "Invalid email account" });
-    }
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ success: false, message: error.message || "Internal server error" });
   }
 };
 
