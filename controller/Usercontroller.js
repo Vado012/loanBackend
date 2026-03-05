@@ -29,8 +29,6 @@ const createuser = async (req, res) => {
       }
     });
 
-    await transporter.verify();
-
     const hashedPassword = await bcrypt.hash(Password, 10);
 
     const newuser = await User.create({
@@ -41,21 +39,25 @@ const createuser = async (req, res) => {
       Password: hashedPassword,
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: Email,
-      subject: 'Welcome to Loan App',
-      html: `<h2>Welcome ${Firstname}!</h2><p>Your account has been successfully created.</p>`
-    });
-
-    const admins = await User.find({ role: 'admin' });
-    for (const admin of admins) {
+    try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
-        to: admin.Email,
-        subject: 'New User Registration',
-        html: `<h3>New User Registered</h3><p><strong>Name:</strong> ${Firstname} ${Lastname}</p><p><strong>Email:</strong> ${Email}</p><p><strong>Phone:</strong> ${Phonenumber}</p>`
+        to: Email,
+        subject: 'Welcome to Loan App',
+        html: `<h2>Welcome ${Firstname}!</h2><p>Your account has been successfully created.</p>`
       });
+
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: admin.Email,
+          subject: 'New User Registration',
+          html: `<h3>New User Registered</h3><p><strong>Name:</strong> ${Firstname} ${Lastname}</p><p><strong>Email:</strong> ${Email}</p><p><strong>Phone:</strong> ${Phonenumber}</p>`
+        });
+      }
+    } catch (emailError) {
+      console.log('Email notification failed:', emailError.message);
     }
 
     
