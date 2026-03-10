@@ -21,6 +21,11 @@ const createuser = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email already exists" });
     }
 
+    const existingPhone = await User.findOne({ Phonenumber });
+    if (existingPhone) {
+      return res.status(400).json({ success: false, message: "Phone number already exists" });
+    }
+
     const hashedPassword = await bcrypt.hash(Password, 10);
 
     const newuser = await User.create({
@@ -63,8 +68,9 @@ const createuser = async (req, res) => {
     res.status(201).json({ success: true, message: "User created successfully!" });
   } catch (error) {
     console.error(error);
-    if (error.message.includes('Invalid login') || error.code === 'EAUTH') {
-      return res.status(400).json({ success: false, message: "Invalid email account or email service unavailable" });
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ success: false, message: `${field} already exists` });
     }
     res.status(500).json({ success: false, message: error.message || "Internal server error" });
   }
