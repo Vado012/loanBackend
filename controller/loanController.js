@@ -1,4 +1,6 @@
 import Loan from "../Models/loan.js";
+import User from "../Models/User.js";
+import nodemailer from "nodemailer";
 
 const applyLoan = async (req, res) => {
     try {
@@ -10,6 +12,30 @@ const applyLoan = async (req, res) => {
         }
         
         const newLoan = await Loan.create({ amount, term, purpose, userId });
+        const user = await User.findById(userId);
+
+        try {
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+
+            const admins = await User.find({ role: 'admin' });
+            for (const admin of admins) {
+                await transporter.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: admin.Email,
+                    subject: 'New Loan Application',
+                    html: `<h3>New Loan Application</h3><p><strong>User:</strong> ${user.Firstname} ${user.Lastname}</p><p><strong>Email:</strong> ${user.Email}</p><p><strong>Amount:</strong> ${amount}</p><p><strong>Term:</strong> ${term} months</p><p><strong>Purpose:</strong> ${purpose}</p>`
+                });
+            }
+        } catch (emailError) {
+            console.log('Email notification failed:', emailError.message);
+        }
+
         res.status(201).json({ success: true, message: "Loan applied successfully!", loan: newLoan });
     } catch (error) {
         console.error(error);
@@ -40,14 +66,10 @@ const getUserLoans = async (req, res) => {
 
 const deleteLoan = async (req, res) => {
     try {
-        const loan = await Loan.findById(req.params.id);
+        const loan = await Loan.findByIdAndDelete(req.params.id);
         if (!loan) {
             return res.status(404).json({ success: false, message: "Loan not found" });
         }
-        if (req.user.role !== "admin" && loan.userId.toString() !== req.user.id) {
-            return res.status(403).json({ success: false, message: "Unauthorized" });
-        }
-        await Loan.findByIdAndDelete(req.params.id);
         res.status(200).json({ success: true, message: "Loan deleted successfully!" });
     } catch (error) {
         console.error(error);

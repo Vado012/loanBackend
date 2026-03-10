@@ -162,4 +162,64 @@ const logout = (req, res) => {
   res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
-export { createuser, getAllUsers, deleteUser, updateUser, login, logout, getProfile };
+const forgotPassword = async (req, res) => {
+  try {
+    const { Email } = req.body;
+    const user = await User.findOne({ Email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 600000;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: Email,
+      subject: 'Password Reset OTP',
+      html: `<h2>Password Reset</h2><p>Your OTP is: <strong>${otp}</strong></p><p>Valid for 10 minutes.</p>`
+    });
+
+    res.status(200).json({ success: true, message: "OTP sent to your email" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { Email, otp, newPassword } = req.body;
+    const user = await User.findOne({ Email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.Password = hashedPassword;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { createuser, getAllUsers, deleteUser, updateUser, login, logout, getProfile, forgotPassword, resetPassword };
