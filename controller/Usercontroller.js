@@ -173,7 +173,7 @@ const logout = (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { Email } = req.body;
-    const user = await User.findOne({ Email });
+    const user = await User.findOne({ Email: { $regex: new RegExp(`^${Email}$`, 'i') } });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -193,7 +193,7 @@ const forgotPassword = async (req, res) => {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: Email,
+      to: user.Email,
       subject: 'Password Reset OTP',
       html: `<h2>Password Reset</h2><p>Your OTP is: <strong>${otp}</strong></p><p>Valid for 10 minutes.</p>`
     });
@@ -208,7 +208,7 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { Email, otp, newPassword } = req.body;
-    const user = await User.findOne({ Email });
+    const user = await User.findOne({ Email: { $regex: new RegExp(`^${Email}$`, 'i') } });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
